@@ -40,7 +40,7 @@ target_include_directories(GTpo
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         $<INSTALL_INTERFACE:include>
     )
-    
+
 # Require C++14
 target_compile_features(GTpo
     INTERFACE
