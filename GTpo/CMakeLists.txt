@@ -33,7 +33,7 @@ add_library(GTpo INTERFACE)
 
 target_include_directories(GTpo
     INTERFACE
-        $<BUILD_INTERFACE:src>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         $<INSTALL_INTERFACE:include>
     )
     
