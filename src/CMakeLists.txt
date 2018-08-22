@@ -1,3 +1,4 @@
+
 set( qan_source_files
     qanGraphView.cpp
     qanUtils.cpp
@@ -54,21 +55,22 @@ set (qan_header_files
 source_group("Headers" FILES ${qan_header_files})
 source_group("Sources" FILES ${qan_source_files})
 
+file (GLOB qan_qml_files ${CMAKE_CURRENT_SOURCE_DIR}/*.qml)
+set (qan_plugin_files
+    ${CMAKE_CURRENT_SOURCE_DIR}/qanPlugin.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/qanPlugin.h
+)
+
 # Configure Qt
 set(CMAKE_AUTOMOC ON)
-
 qt5_wrap_cpp(qan_source_files, qan_header_files)
-
 set(CMAKE_AUTORCC ON)
 list(APPEND RESOURCES QuickQanava.qrc)
 
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS $<$<CONFIG:Debug>:QT_QML_DEBUG>)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+# Configure QuickQanava library ###############################################
 add_library(QuickQanava ${qan_source_files} ${qan_header_files} ${RESOURCES})
-
-target_link_libraries(QuickQanava PUBLIC GTpo QuickContainers Qt5::Core Qt5::Gui Qt5::QuickControls2)
-
 target_include_directories(QuickQanava
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -84,7 +86,7 @@ install(FILES
     ${qan_header_files}
     DESTINATION include
     )
-    
+
 install(TARGETS QuickQanava
     EXPORT Targets
     LIBRARY DESTINATION lib
@@ -92,3 +94,43 @@ install(TARGETS QuickQanava
     RUNTIME DESTINATION bin
     INCLUDES DESTINATION include
     )
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+target_link_libraries(QuickQanava PUBLIC GTpo QuickContainers Qt5::Core Qt5::Gui Qt5::QuickControls2)
+
+
+# Configure QuickQanava QML module plugin #####################################
+set(PLUGIN_TARGET "quickqanavaplugin")
+add_library(${PLUGIN_TARGET} SHARED ${qan_plugin_files})
+target_link_libraries(${PLUGIN_TARGET} QuickQanava)
+
+# QML module deployment
+set(URI QuickQanava)
+string(REPLACE "." "/" TARGETPATH ${URI})
+execute_process(COMMAND ${QT_QMAKE_EXECUTABLE} -query QT_INSTALL_QML OUTPUT_VARIABLE QT_INSTALL_QML_RAW)
+string(STRIP ${QT_INSTALL_QML_RAW} QT_INSTALL_QML)
+set(DESTDIR "${QT_INSTALL_QML}/${TARGETPATH}")
+install(TARGETS ${PLUGIN_TARGET} DESTINATION ${DESTDIR})
+
+message("QT_INSTALL_QML=" ${QT_INSTALL_QML})
+
+# Install qmldir file
+add_custom_command(
+    TARGET ${PLUGIN_TARGET}
+    POST_BUILD
+    COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${CMAKE_CURRENT_SOURCE_DIR}/qmldir
+        ${DESTDIR}/qmldir
+)
+
+# Install source QML files to ease debugging
+add_custom_command(
+    TARGET ${PLUGIN_TARGET}
+    POST_BUILD
+    COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${qan_qml_files}
+        ${DESTDIR}
+)
+
