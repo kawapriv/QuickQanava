@@ -4,8 +4,10 @@ project(QuickQanava VERSION 0.9.4 LANGUAGES CXX)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Conan.io
+if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
+endif()
 
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Qml REQUIRED)
